@@ -16,7 +16,7 @@ use App\Http\Controllers\Auth\UserSocialAuthController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-
+// By Kheder Youssef
 Route::prefix('auth/')->group(function ()  {
    Route::controller(UserAuthController::class)->group(function () {
           Route::post('sign-up','signUp');
