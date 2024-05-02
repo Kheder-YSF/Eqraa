@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Reset Successfully</title>
+    <title>Email Verified Successfully</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -52,9 +52,9 @@
         <div class="logo">
             <img src="{{$message->embed(public_path('imgs/logo.png'))}}" alt="App Logo" width="100">
         </div>
-        <p class="message">Your Password Has Been Reset Successfully !</p>
+        <p class="message">Your Email Has Been Verified Successfully !</p>
         <p class="success">Congratulations !</p>
-        <p>You Can Now Login With Your New Password. If You Did Not Initiate This Password Reset, Please Contact Us Immediately.</p>
+        <p>Enjoy, Hope You Have A Good Experience</p>
     </div>
 </body>
 

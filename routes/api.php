@@ -28,5 +28,6 @@ Route::prefix('auth/')->group(function ()  {
           Route::post('check-password-reset-code','checkPasswordResetCode');
           Route::post('password-reset','passwordReset');
           Route::post('email-verify','emailVerify');
+          Route::post('resend-email-verification-code','resendEmailVerificationCode');
  });
 });

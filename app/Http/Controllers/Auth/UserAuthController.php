@@ -38,7 +38,6 @@ class UserAuthController extends Controller
         return response()->json([
             "message" => "Check Your Email For The Email Verification Code"
         ] , 201);
-       
     }
 
 
