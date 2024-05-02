@@ -9,6 +9,7 @@ use App\Mail\EmailVerification;
 use App\Mail\ForgetPasswordEmail;
 use App\Models\PasswordResetCode;
 use App\Http\Controllers\Controller;
+use App\Mail\EmailVerifiedSuccessfully;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Models\EmailVerificationCode;
@@ -105,6 +106,7 @@ class AuthSettings extends Controller
         $user->update([
             'email_verified_at'=>now()
         ]);
+        Mail::to($user->email)->send(new EmailVerifiedSuccessfully());
         $emailVerificationCode->delete();
         $token = $user->createToken($user->name . '-' . 'AccessToken')->plainTextToken;
         return response()->json([

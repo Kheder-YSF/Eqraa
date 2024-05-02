@@ -37,7 +37,7 @@ class EmailVerifiedSuccessfully extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.email.verified-successfully',
+            view: 'emails.email-verified-successfully',
             with: ["message"=>$this]
         );
     }
