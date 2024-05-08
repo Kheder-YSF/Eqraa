@@ -1,8 +1,10 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\Auth\AuthSettings;
+use App\Http\Controllers\Admin\AdminController;
 use App\Http\Controllers\Auth\UserAuthController;
 use App\Http\Controllers\Auth\UserSocialAuthController;
 
@@ -16,7 +18,7 @@ use App\Http\Controllers\Auth\UserSocialAuthController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-// By Kheder Youssef
+// By Kheder Youssef 💜
 Route::prefix('auth/')->group(function ()  {
    Route::controller(UserAuthController::class)->group(function () {
           Route::post('sign-up','signUp');
@@ -30,4 +32,12 @@ Route::prefix('auth/')->group(function ()  {
           Route::post('email-verify','emailVerify');
           Route::post('resend-email-verification-code','resendEmailVerificationCode');
  });
+});
+Route::prefix('books')->middleware(['auth:sanctum','verified'])->controller(BookController::class)->group(function () {
+       Route::post('/','store');
+       Route::get('/','index');
+       Route::get('/{id}','show');
+       Route::delete('/{id}','destroy');
+       Route::put('/{id}','update'); 
+       Route::get('/{id}/download','download');      
 });
