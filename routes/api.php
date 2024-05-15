@@ -39,5 +39,5 @@ Route::prefix('books')->middleware(['auth:sanctum','verified'])->controller(Book
        Route::get('/{id}','show');
        Route::delete('/{id}','destroy');
        Route::put('/{id}','update'); 
-       Route::get('/{id}/download','download');      
+       Route::get('/{id}/download','download');    
 });

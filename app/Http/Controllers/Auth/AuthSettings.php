@@ -73,7 +73,7 @@ class AuthSettings extends Controller
         $passwordResetField = PasswordResetCode::where('code' , $data['code'])->first();
         if(!$passwordResetField['checked'])
         {
-            if($passwordResetField->created_at <= now()->subMinutes(1))
+            if($passwordResetField->created_at <= now()->subMinutes(15))
             {
                 $passwordResetField->delete();
                 return response()->json(["message"=>"Expired Code"] , 422);
