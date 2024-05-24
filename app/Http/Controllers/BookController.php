@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Models\BookUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -150,5 +151,45 @@ class BookController extends Controller
             $bookPath = 'storage/'.$book->path;
             return response()->download($bookPath,$book->name);
         }  else return response()->json(['message'=>'Book Not Exist'],404);
+    }
+    public function addToFavorite($id) {
+        $book = Book::find($id);
+        if($book)
+        {
+            BookUser::updateOrCreate([
+                'user_id'=>auth()->id(),
+                'book_id'=>$id
+            ],['favorite'=>true]);
+            return response()->json(['message'=>'You Added '.$book->title.' To Your Favorite'],200);
+        }
+        else
+            return response()->json(['message'=>'There Is No Such A Book'],404);
+    }
+    public function rate(Request $request,$id) {
+        $validator = Validator::make($request->only(['rating']),['rating'=>'required|numeric']);
+        if($validator->fails())
+            return response()->json([$validator->errors()],400);
+        else
+        {
+            $validRating = $validator->validated()['rating'];
+            $book = Book::find($id);
+            if($book)
+            {
+                BookUser::updateOrCreate([
+                    'user_id'=>auth()->id(),
+                    'book_id'=>$id
+                ],['rating'=>$validRating]);
+                $ratings = BookUser::where([['book_id','=',$id],['rating','<>','-1']])->pluck('rating');
+                $sum = 0;
+                foreach($ratings as $rating):
+                    $sum += $rating;
+                endforeach;
+                $book->rating = $sum/count($ratings);
+                $book->save();
+                return response()->json(['message'=>'You Rated '.$book->title.' As '.$validRating . ' Star'],200);
+            }
+            else
+                return response()->json(['message'=>'There Is No Such A Book'],404);
+        }
     }
 }

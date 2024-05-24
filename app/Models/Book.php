@@ -56,4 +56,7 @@ class Book extends Model
         }
         $res->where($queries);
     }
+    public function users() {
+        return $this->belongsToMany(User::class);
+    }
 }

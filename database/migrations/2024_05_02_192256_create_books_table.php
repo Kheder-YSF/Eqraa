@@ -24,7 +24,7 @@ return new class extends Migration
                 ]);
             $table->string('author');
             $table->longText('description');
-            $table->integer('rating')->default(0);
+            $table->float('rating')->default(-1);
             $table->string('cover');
             $table->string('path');
             $table->integer('number_of_pages');

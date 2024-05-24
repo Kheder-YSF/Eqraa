@@ -1,12 +1,11 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BookController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\Auth\AuthSettings;
-use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\Auth\UserAuthController;
-use App\Http\Controllers\Auth\UserSocialAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,5 +38,20 @@ Route::prefix('books')->middleware(['auth:sanctum','verified'])->controller(Book
        Route::get('/{id}','show');
        Route::delete('/{id}','destroy');
        Route::put('/{id}','update'); 
-       Route::get('/{id}/download','download');    
+       Route::get('/{id}/download','download');
+       Route::post('/{id}/add-to-favorite','addToFavorite');      
+       Route::post('/{id}/rate','rate');    
+});
+Route::prefix('user')->middleware(['auth:sanctum','verified'])->controller(UserController::class)->group(function () {
+       Route::get('/favorite','favorites');         
+});
+
+Route::prefix('challenges')->middleware(['auth:sanctum','verified'])->controller(ChallengeController::class)->group(function () {
+       Route::post('/','store');
+       Route::get('/','index');
+       Route::get('/{id}','show');
+       Route::delete('/{id}','destroy');
+       Route::put('/{id}','update'); 
+       Route::post('/{id}/join','joinChallenge');
+       Route::post('/{id}/resign','resignChallenge');
 });
