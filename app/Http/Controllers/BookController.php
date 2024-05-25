@@ -152,21 +152,8 @@ class BookController extends Controller
             return response()->download($bookPath,$book->name);
         }  else return response()->json(['message'=>'Book Not Exist'],404);
     }
-    public function addToFavorite($id) {
-        $book = Book::find($id);
-        if($book)
-        {
-            BookUser::updateOrCreate([
-                'user_id'=>auth()->id(),
-                'book_id'=>$id
-            ],['favorite'=>true]);
-            return response()->json(['message'=>'You Added '.$book->title.' To Your Favorite'],200);
-        }
-        else
-            return response()->json(['message'=>'There Is No Such A Book'],404);
-    }
     public function rate(Request $request,$id) {
-        $validator = Validator::make($request->only(['rating']),['rating'=>'required|numeric']);
+        $validator = Validator::make($request->only(['rating']),['rating'=>'required|numeric|max:5|min:0']);
         if($validator->fails())
             return response()->json([$validator->errors()],400);
         else
@@ -192,4 +179,35 @@ class BookController extends Controller
                 return response()->json(['message'=>'There Is No Such A Book'],404);
         }
     }
+    public function addToFavorite($id) {
+        $book = Book::find($id);
+        if($book)
+        {
+            BookUser::updateOrCreate([
+                'user_id'=>auth()->id(),
+                'book_id'=>$id
+            ],['favorite'=>true]);
+            return response()->json(['message'=>'You Added '.$book->title.' To Your Favorite'],200);
+        }
+        else
+            return response()->json(['message'=>'There Is No Such A Book'],404);
+    }
+    public function removeFromFavorite($id) {
+        $book = Book::find($id);
+        if($book)
+        {
+            $book_user = BookUser::where([['user_id','=',auth()->id()],['book_id','=',$id]])->first();
+            $book_user->favorite = false;
+            $book_user->save();
+            return response()->json(['message'=>'You Removed '.$book->title.' From Your Favorite'],200);
+        }
+        else
+            return response()->json(['message'=>'There Is No Such A Book'],404);
+    }
+    public function myFavorite() {
+        $user_favorite_ids = BookUser::where([['user_id','=',auth()->id()],['favorite','=','1']])->pluck('book_id');
+        $user_favorite_books = Book::whereIn('id',$user_favorite_ids)->get();
+        return response()->json($user_favorite_books,200);
+    }
+   
 }

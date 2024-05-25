@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->integer('number_of_friends')->default(0);
+            $table->string('bio')->nullable();
+            $table->json('social_links')->nullable();
+            $table->string('avatar')->nullable();
             $table->boolean('is_admin')->default(0);
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

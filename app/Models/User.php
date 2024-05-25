@@ -24,6 +24,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'is_admin',
+        'social_links',
+        'avatar',
+        'bio',
         'email_verified_at'
     ];
 
@@ -43,11 +46,18 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'social_links'=>'array'
     ];
     public function challenges() {
         return $this->belongsToMany(Challenge::class);
     }
     public function books() {
-        return $this->belongsToMany(Book::class);
+        return $this->belongsToMany(Book::class)->withPivot(['id','percentage','favorite','rating'])->wherePivot('percentage','<>','0');
+    }
+    public function bookmarks() {
+        return $this->hasMany(BookMark::class);
+    }
+    public function highlights() {
+        return $this->hasMany(Highlight::class);
     }
 }
