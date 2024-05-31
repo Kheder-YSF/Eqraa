@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\BookUser;
+use App\Models\Challenge;
 use Illuminate\Http\Request;
+use App\Models\BookChallenge;
+use App\Models\ChallengeUser;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -209,5 +212,82 @@ class BookController extends Controller
         $user_favorite_books = Book::whereIn('id',$user_favorite_ids)->get();
         return response()->json($user_favorite_books,200);
     }
-   
+   public function read(Request $request,$id)  {
+        $book = Book::find($id);
+        if(isset($book))
+        {
+            $validator = Validator::make($request->only(['page_number']),[
+                'page_number'=>'required|numeric'
+            ]);
+            if($validator->fails())
+                return response()->json($validator->errors(),400);
+            $page_number = $validator->validated()['page_number'];
+            if($page_number < 0 || $page_number > $book->number_of_pages)
+                return response()->json(['message'=>'Page Number Out Is Of The Book Range Of Pages'],400);
+            $book_user = BookUser::updateOrCreate([
+                'user_id'=>auth()->id(),
+                'book_id'=>$book->id,
+            ],[
+              'percentage' => round(($page_number/$book->number_of_pages) * 100,2)  
+            ]);
+            $userChallenges = auth()->user()->challenges()->pluck('challenge_id');
+            $challengesThatIncludeThisBookAndTheUserHadJoinedThem = BookChallenge::whereIn('challenge_id',$userChallenges)->where('book_id',$id)->pluck('challenge_id');
+            foreach($challengesThatIncludeThisBookAndTheUserHadJoinedThem as $chi)
+            {
+                $total = 0;
+                $user_challenge = ChallengeUser::where('challenge_id','=',$chi)->first();
+                $challenge_books = Challenge::find($user_challenge->challenge_id)->books;
+                foreach($challenge_books as $chb)
+                {
+                    $per = BookUser::where('user_id',$user_challenge->user_id)->where('book_id',$chb->id)->first()->percentage;
+                    $total += $per;
+                };
+                $user_challenge->update([
+                    'progress' => ($total / (count($challenge_books)*100))* 100
+                ]);
+            }
+            return response()->json($book_user,200);
+        }
+        else return response()->json(['message'=>'Book Not Found'],404);
+   }
+   public function addToChallenge($id,$challenge_id) {
+    $book = Book::find($id);
+    if(isset($book))
+    {
+        $challenge = Challenge::find($challenge_id);
+        if(isset($challenge))
+        {
+            $bc = BookChallenge::where('challenge_id',$challenge_id)->where('book_id',$id)->first();
+            if(isset($bc))
+                return response()->json(['message'=>'You Have Already Added This Book To This Challenge'],400);
+            BookChallenge::create([
+                'book_id' => $id,
+                'challenge_id'=>$challenge_id
+            ]);
+            return response()->json(['message'=>'You Added '.$book->title.' Book To The '.$challenge->name.' Challenge'],200);
+        }
+        else return response()->json(['message'=>'There Is No Such A Challenge'],404);
+    }
+    else return response()->json(['message'=>'There Is No Such A Book'],404);
+   }
+   public function removeFromChallenge($id,$challenge_id) {
+    $book = Book::find($id);
+    if(isset($book))
+    {
+        $challenge = Challenge::find($challenge_id);
+        if(isset($challenge))
+        {
+            $bc = BookChallenge::where('challenge_id',$challenge_id)->where('book_id',$id)->first();
+            if(isset($bc))
+            {
+                $bc->delete();
+                return response()->json(['message'=>'You Removed '.$book->title.' Book From The '.$challenge->name.' Challenge'],200);
+            }
+            else
+                return response()->json(['message'=>'The '.$challenge->name.' Challenge Does Not Include This Book'],400);
+        }
+        else return response()->json(['message'=>'There Is No Such A Challenge'],404);
+    }
+    else return response()->json(['message'=>'There Is No Such A Book'],404);
+   }
 }

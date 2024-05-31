@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\AuthSettings;
 use App\Http\Controllers\BookmarkController;
 use App\Http\Controllers\ChallengeController;
 use App\Http\Controllers\Auth\UserAuthController;
+use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\HightlightController;
 
 /*
@@ -44,20 +45,31 @@ Route::prefix('books')->middleware(['auth:sanctum','verified'])->controller(Book
        Route::get('/{id}/download','download');
        Route::post('/{id}/add-to-favorite','addToFavorite');      
        Route::delete('/{id}/remove-from-favorite','removeFromFavorite');      
-       Route::post('/{id}/rate','rate');    
-       
+       Route::post('/{id}/rate','rate');  
+       Route::post('/{id}/read','read');    
+       Route::post('/{id}/addToChallenge/{challenge_id}','addToChallenge');    
+       Route::delete('/{id}/removeFromChallenge/{challenge_id}','removeFromChallenge');    
 });
-Route::prefix('challenges')->middleware(['auth:sanctum','verified'])->controller(ChallengeController::class)->group(function () {
-       Route::post('/','store');
-       Route::get('/','index');
-       Route::get('/{id}','show');
-       Route::delete('/{id}','destroy');
-       Route::put('/{id}','update'); 
-       Route::post('/{id}/join','joinChallenge');
-       Route::post('/{id}/resign','resignChallenge');
+Route::prefix('challenges')->middleware(['auth:sanctum','verified'])->group(function () {
+       Route::controller(ChallengeController::class)->group(function ()  {
+              Route::post('/','store');
+              Route::get('/','index');
+              Route::get('/{id}','show');
+              Route::delete('/{id}','destroy');
+              Route::put('/{id}','update'); 
+              Route::post('/{id}/join','joinChallenge');
+              Route::post('/{id}/resign','resignChallenge');
+              Route::post('/{id}/publish','publish');
+       });
+       Route::middleware(['is_admin'])->controller(BadgeController::class)->group(function ()  {
+              Route::post('/{id}/badges','store');
+              Route::get('/{id}/badges','index');
+              Route::delete('/{id}/badges/{badge_id}','destroy');
+              Route::put('/{id}/badges/{badge_id}','update');
+              Route::get('/{id}/badges/{badge_id}','show');
+       });    
 });
 Route::prefix('user')->middleware(['auth:sanctum','verified'])->controller(UserController::class)->group(function () {
-  
        Route::get('/{id}','profile');
        Route::put('/','updateProfile');       
 });
@@ -75,4 +87,4 @@ Route::prefix('highlights')->middleware(['auth:sanctum','verified'])->controller
        Route::delete('/{id}','destroy');
        Route::put('/{id}','update'); 
 });
-
+Route::get('/testing',[UserController::class,'test'])->middleware(['auth:sanctum','verified']);

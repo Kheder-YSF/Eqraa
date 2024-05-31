@@ -59,4 +59,7 @@ class Book extends Model
     public function users() {
         return $this->belongsToMany(User::class);
     }
+    public function challenges() {
+        return $this->belongsToMany(Challenge::class);
+    }
 }

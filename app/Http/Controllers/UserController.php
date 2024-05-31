@@ -56,4 +56,7 @@ class UserController extends Controller
         }
         return response()->json(['message'=>'User Not Found'],404);
     }
+    public function test() {
+        return response()->json(auth()->user()->challenges);
+    }
 }

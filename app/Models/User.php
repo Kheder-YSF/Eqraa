@@ -60,4 +60,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function highlights() {
         return $this->hasMany(Highlight::class);
     }
+    public function badges() {
+        return $this->belongsToMany(Badge::class);
+    }
 }

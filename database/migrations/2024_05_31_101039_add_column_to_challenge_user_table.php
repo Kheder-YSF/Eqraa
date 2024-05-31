@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('challenges', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->dateTime('end_date');
-            $table->timestamps();
+        Schema::table('challenge_user', function (Blueprint $table) {
+            $table->float('progress')->after('resigned')->default(0);
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('challenges');
+        Schema::table('challenge_user', function (Blueprint $table) {
+            $table->dropColumn(['progress']);
+        });
     }
 };
