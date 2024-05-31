@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 use Carbon\Carbon;
-use App\Models\Book;
-use App\Models\BookUser;
 use App\Models\Challenge;
 use Illuminate\Http\Request;
 use App\Models\ChallengeUser;
@@ -24,7 +22,7 @@ class ChallengeController extends Controller
     {
         $validator = Validator::make($request->only(['name','end_date']),
         [
-            'name'=>'required|string',
+            'name'=>'required|string|unique:challenges,name',
             'end_date'=>'required|date',
         ]);
         if($validator->fails())
@@ -33,9 +31,12 @@ class ChallengeController extends Controller
         {
             $client_time_zone = $request->header('time_zone','Asia/Damascus');
             $data = $validator->validated();
+            $end_date = Carbon::parse($data['end_date'] , $client_time_zone)->timezone(config('app.timezone'));
+            if($end_date < now())
+                return response()->json(['message'=>'Invalid End Date'],400);
             Challenge::create([
                 'name'=>$data['name'],
-                'end_date'=> Carbon::parse($data['end_date'] , $client_time_zone)->timezone(config('app.timezone'))
+                'end_date'=> $end_date
             ]);
             return response()->json(['message'=>'Challenge Created Successfully'],201);
         }
@@ -54,7 +55,7 @@ class ChallengeController extends Controller
     {
         $validator = Validator::make($request->only(['name','end_date']),
         [
-            'name'=>'string',
+            'name'=>'string|unique:challenges,name',
             'end_date'=>'date',
         ]);
          if($validator->fails())
@@ -66,9 +67,16 @@ class ChallengeController extends Controller
             $rc = Challenge::find($id);
             if($rc)
             {
+                $end_date = $rc->end_date;
+                if(isset($data['end_date']))
+                {
+                    $end_date = Carbon::parse($data['end_date'] , $client_time_zone)->timezone(config('app.timezone'));
+                    if($end_date < now())
+                        return response()->json(['message'=>'Invalid End Date'],400);
+                }
                 $rc->update([
                     'name' => $data['name']?? $rc->name,
-                    'end_date' => Carbon::parse($data['end_date'],$client_time_zone)->timezone(config('app.timezone')) ?? $rc->end_date,
+                    'end_date' => $end_date
                 ]);
                 return response()->json(['message'=>"Challenge Updated Successfully"],200);
             }
@@ -97,27 +105,31 @@ class ChallengeController extends Controller
             {
                 if($challenge->published)
                 {
-                    $challenge_user = ChallengeUser::where([['user_id','=',$user->id],['challenge_id','=',$challenge->id]])->first();
-                    if(isset($challenge_user))
-                        return response()->json(['message'=>'You Either Already Joined This Challenge Or You Have Resigned From It So You Can\'t Join Again'],200);
-                    else
+                    if($challenge->publishing_date > now()->subMinutes(5))
                     {
-                        $user_books = $user->books()->pluck('book_id')->toArray();
-                        $challenge_books = $challenge->books()->pluck('book_id')->toArray();
-                        $joined_books = array_intersect($user_books,$challenge_books);
-                        if(count($joined_books) > 0)
-                            return response()->json(['message'=>'You Can Not Join This Challenge Because You Have Read One Or More Of The Books Involved In This Challenge'],400);
+                        $challenge_user = ChallengeUser::where([['user_id','=',$user->id],['challenge_id','=',$challenge->id]])->first();
+                        if(isset($challenge_user))
+                            return response()->json(['message'=>'You Either Already Joined This Challenge Or You Have Resigned From It So You Can\'t Join Again'],200);
                         else
                         {
-                            ChallengeUser::create([
-                                'user_id'=>$user->id,
-                                'challenge_id'=>$id
-                            ]);
-                            $challenge = Challenge::find($id); 
-                            $challenge->save();
-                            return response()->json(['message'=>$user->name.' Joined The '.$challenge->name.' Challenge Successfully']);
-                        }
-                    } 
+                            $user_books = $user->books()->pluck('book_id')->toArray();
+                            $challenge_books = $challenge->books()->pluck('book_id')->toArray();
+                            $joined_books = array_intersect($user_books,$challenge_books);
+                            if(count($joined_books) > 0)
+                                return response()->json(['message'=>'You Can Not Join This Challenge Because You Have Read One Or More Of The Books Involved In This Challenge'],400);
+                            else
+                            {
+                                ChallengeUser::create([
+                                    'user_id'=>$user->id,
+                                    'challenge_id'=>$id
+                                ]);
+                                $challenge = Challenge::find($id); 
+                                $challenge->save();
+                                return response()->json(['message'=>$user->name.' Joined The '.$challenge->name.' Challenge Successfully']);
+                            }
+                        } 
+                    }
+                    else return response()->json(['message'=>'Sorry You\'re Too Late You Can\'t Join This Challenge Anymore Try To Be Faster Next Time'],400);
                 }
                 else return response()->json(['message'=>'You Can\'t Join This Challenge Yet Until It Get Published By The Admins'],400);
             }
@@ -158,10 +170,11 @@ class ChallengeController extends Controller
             if(count($challenge->books) > 0)
             {
                 $challenge->published = true;
+                $challenge->publishing_date = now();
                 $challenge->save();
-                return response()->json(['message'=>$challenge->name.' Challenge Has Been Published Now Readers Can Joins And Start Reading'],200);
+                return response()->json(['message'=>$challenge->name.' Challenge Has Been Published. Now Readers Can Joins And Start Reading'],200);
             }
-            else return response()->json(['message'=>"You Can\'t Publish A Challenge Without Adding Any Book To It , Add At Least One Book"],400);
+            else return response()->json(['message'=>"You Can't Publish A Challenge Without Adding Any Book To It , Add At Least One Book"],400);
         }
         else return response()->json(['message'=>"There Is No Such A Challenge"],404);
     }

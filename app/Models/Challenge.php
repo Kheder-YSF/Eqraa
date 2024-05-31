@@ -8,9 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Challenge extends Model
 {
     use HasFactory;
-    protected $fillable = ['name','end_date','published'];
+    protected $fillable = ['name','end_date','published','publishing_date'];
     protected $casts = [
         'end_date'=>'datetime',
+        'publishing_date'=>'datetime'
     ];
     public function users() {
         return $this->belongsToMany(User::class);
